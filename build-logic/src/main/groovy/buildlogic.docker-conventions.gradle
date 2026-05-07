@@ -1,0 +1,12 @@
+plugins {
+    id "com.bmuschko.docker-java-application"
+}
+
+docker {
+    javaApplication {
+        baseImage = "amazoncorretto:21-alpine3.22"
+        images = ["${project.name}:${project.version}", "${project.name}:latest"]
+        jvmArgs = ['-Xms200m', '-Xmx200m',
+                   '-XX:+UseZGC', '-XX:+ZGenerational', '-XX:+AlwaysPreTouch']
+    }
+}
