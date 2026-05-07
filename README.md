@@ -141,6 +141,11 @@ npm run type-check    # vue-tsc type checking
 npm run lint          # eslint --fix
 ```
 
+![Demo UI screenshot](demo-ui.png)
+
+Open http://localhost:5173 to view the UI.
+
+
 ## 3. Build the backend launcher scripts (one time)
 
 The backend modules (`http-server`, `generator`, `pulsar-listener`,
