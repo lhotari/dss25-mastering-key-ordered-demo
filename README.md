@@ -52,6 +52,41 @@ after editing Java code; re-run `just ui-install` after `package.json` changes.
 Every pane has `enter: false`, so the commands appear at the prompt **without running**.
 Press Enter in each pane in order to step through the demo while talking over it.
 
+Switching between the `infra` and `apps` windows:
+
+- **Keyboard:** `Ctrl-b n` (next window) / `Ctrl-b p` (previous), or jump directly with
+  `Ctrl-b 0` (`infra`) and `Ctrl-b 1` (`apps`). Use `Ctrl-b w` to pick from a list.
+- **Mouse:** click the window name in tmux's bottom status bar (mouse support is enabled
+  by the project-local `tmux.conf`). Click a pane to focus it; scroll to navigate
+  scrollback.
+
+To move between panes within a window: `Ctrl-b` then an arrow key, or click the pane.
+
+The recipe also sources the project-local [`tmux.conf`](tmux.conf) into the running
+tmux server before attaching, so the demo always uses the same demo-tuned settings
+(true colour, mouse on, pane-border with `pane_current_path`, larger scrollback,
+title passthrough to the outer terminal) regardless of your personal `~/.tmux.conf`.
+The settings are applied to the active tmux server, so any other tmux sessions you
+have open will pick them up too while the demo is running.
+
+If you are on macOS and run iTerm2, use `just demo-in-iterm` instead. It does the
+same setup but attaches via iTerm2's [native tmux integration](https://iterm2.com/documentation-tmux-integration.html)
+(`tmux -CC attach`), so each tmux window becomes a real iTerm2 tab and each pane a
+real iTerm2 split — with native scrollback, search, and font scaling that matter on
+stage.
+
+> **Tabs vs. separate windows in iTerm2.** By default iTerm2 opens each tmux window
+> as its own iTerm2 *window*. To get the `infra` and `apps` tmux windows as tabs in
+> the iTerm2 window you ran `just demo-in-iterm` from:
+>
+> - Open **iTerm2 → Settings → Advanced**, type **`tmux`** in the search box at the
+>   top, and change **"When opening tmux windows, open them as:"** (or similarly
+>   worded) to **"Tabs in the attaching window"**. The setting is in the Advanced
+>   pane, not under General → tmux.
+> - Alternatively, after attaching you can move individual tmux windows into tabs
+>   from iTerm2's menu (right-click the iTerm2 window's tab bar, or look under
+>   the **Shell → tmux** menu).
+
 To list every recipe: `just --list`. Each app recipe is variadic — pass extra args
 after `--`:
 

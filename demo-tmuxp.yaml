@@ -2,7 +2,7 @@
 #
 # Load with:
 #   tmuxp load demo-tmuxp.yaml
-# or:
+# or (recommended — also applies the project-local tmux.conf):
 #   just demo
 #
 # Every command is staged with `enter: false`, so when the session opens each
