@@ -1,0 +1,21 @@
+DSS25 Mastering Key-Ordered Message Processing in Apache Pulsar — parallel processing demo
+Copyright 2026 Lari Hotari
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+------------------------------------------------------------------------------
+Third-party attributions
+------------------------------------------------------------------------------
+
+The `VirtualThreadsMessageListenerExecutor` in
+pulsar-listener/src/main/java/com/github/lhotari/dss25/listener/PulsarListenerApp.java
+was inspired by Philipp Dolif's "Pulsar Virtual Threads Message Listener" project:
+
+    Author:     Philipp Dolif
+    Repository: https://github.com/pdolif/pulsar-virtual-threads-message-listener
+
+Thanks to Philipp for the original idea and reference implementation.

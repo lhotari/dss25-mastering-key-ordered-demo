@@ -267,3 +267,16 @@ docker stop pulsar
 
 To reset the topic between runs, delete and recreate the subscription via the admin API,
 or use a fresh subscription name with `--subscription`.
+
+## Acknowledgements
+
+The `VirtualThreadsMessageListenerExecutor` used by `pulsar-listener` (in
+[`PulsarListenerApp.java`](pulsar-listener/src/main/java/com/github/lhotari/dss25/listener/PulsarListenerApp.java))
+was inspired by Philipp Dolif's
+[**pulsar-virtual-threads-message-listener**](https://github.com/pdolif/pulsar-virtual-threads-message-listener)
+project. Thanks to Philipp for the original idea and reference implementation.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE). See [`NOTICE`](NOTICE) for
+third-party attributions.
