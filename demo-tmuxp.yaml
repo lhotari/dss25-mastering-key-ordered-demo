@@ -1,0 +1,57 @@
+# tmuxp profile for the DSS25 "Mastering Key-Ordered Processing" demo.
+#
+# Load with:
+#   tmuxp load demo-tmuxp.yaml
+# or:
+#   just demo
+#
+# Every command is staged with `enter: false`, so when the session opens each
+# pane shows the command at the prompt without running it. Press Enter in each
+# pane in order:
+#
+#   1. infra / pulsar       → starts the Pulsar standalone broker in Docker
+#   2. infra / ui           → starts the Vite dev server (http://localhost:5173)
+#   3. apps  / http-server  → starts the slow downstream HTTP service
+#   4. apps  / consumer     → starts the Pulsar consumer (default: pulsar-listener)
+#   5. apps  / generator    → publishes test traffic into the topic
+#
+# Edit the args inline (or call e.g. `just pulsar-listener -- --virtual-threads --concurrency 500`
+# manually in the pane) to explore different concurrency/key-space settings.
+
+session_name: dss25-demo
+start_directory: ./
+
+windows:
+  - window_name: infra
+    layout: even-vertical
+    options:
+      pane-border-status: top
+      pane-border-format: " #{pane_title} "
+    panes:
+      - pane_title: pulsar (docker)
+        shell_command:
+          - cmd: just pulsar
+            enter: false
+      - pane_title: demo-ui (vite dev)
+        shell_command:
+          - cmd: just ui
+            enter: false
+
+  - window_name: apps
+    layout: even-vertical
+    options:
+      pane-border-status: top
+      pane-border-format: " #{pane_title} "
+    panes:
+      - pane_title: http-server (slow service)
+        shell_command:
+          - cmd: just http-server
+            enter: false
+      - pane_title: consumer (pulsar-listener)
+        shell_command:
+          - cmd: just pulsar-listener -- --concurrency 100
+            enter: false
+      - pane_title: generator
+        shell_command:
+          - cmd: just generator -- --number-of-messages 200000 --key-space-size 500
+            enter: false

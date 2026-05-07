@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  pulsar:
+    image: apachepulsar/pulsar:latest
+    container_name: pulsar-standalone
+    ports:
+      - "8080:8080"   # Admin REST API
+      - "6650:6650"   # Binary protocol
+    command: >
+      bin/pulsar standalone -nss -nfw
+    volumes:
+      - pulsardata:/pulsar/data
+      - pulsarconf:/pulsar/conf
+
+volumes:
+  pulsardata:
+  pulsarconf:
