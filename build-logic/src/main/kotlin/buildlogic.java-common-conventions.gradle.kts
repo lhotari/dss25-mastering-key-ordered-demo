@@ -1,6 +1,8 @@
+import org.gradle.accessors.dm.LibrariesForLibs
+
 plugins {
     // Apply the java Plugin to add support for Java.
-    id 'java'
+    java
 }
 
 repositories {
@@ -8,18 +10,19 @@ repositories {
     mavenCentral()
 }
 
+val libs = the<LibrariesForLibs>()
+
 dependencies {
     constraints {
     }
-    implementation platform(libs.log4j.bom)
-    implementation libs.bundles.log4j
+    implementation(platform(libs.log4j.bom))
+    implementation(libs.bundles.log4j)
 }
 
 testing {
     suites {
         // Configure the built-in test suite
-        test {
-            // Use JUnit Jupiter test framework
+        val test by getting(JvmTestSuite::class) {
             useJUnitJupiter(libs.versions.junit.jupiter)
         }
     }
