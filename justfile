@@ -70,15 +70,6 @@ demo:
     tmux source-file tmux.conf
     tmux attach -t dss25-demo
 
-# Same as `just demo`, but attaches via iTerm2's native tmux integration
-# (https://iterm2.com/documentation-tmux-integration.html). Each tmux window
-# becomes a native iTerm2 tab, each pane a real iTerm2 split — better
-# scrollback, search, and font scaling for live demos. Run from inside iTerm2.
-demo-in-iterm:
-    tmuxp load -d demo-tmuxp.yaml
-    tmux source-file tmux.conf
-    tmux -CC attach -t dss25-demo
-
 # Stop the demo: stop the tmux session and the Pulsar broker (state preserved)
 stop: pulsar-stop
     -tmux kill-session -t dss25-demo
