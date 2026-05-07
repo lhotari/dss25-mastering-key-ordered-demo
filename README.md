@@ -36,9 +36,13 @@ Once `just`, `tmux`, and `tmuxp` are installed (see below), the entire demo can 
 launched with:
 
 ```bash
-just ui-install        # one-time: install demo-ui npm deps
+just install           # one-time: build backend launcher scripts + demo-ui npm deps
 just demo              # opens a tmuxp session with all panes pre-staged
 ```
+
+`just install` is just shorthand for `just backend-install` (`./gradlew installDist`)
+plus `just ui-install` (`npm install` in `demo-ui`). Re-run `just backend-install`
+after editing Java code; re-run `just ui-install` after `package.json` changes.
 
 `just demo` loads [`demo-tmuxp.yaml`](demo-tmuxp.yaml), which opens two tmux windows:
 
@@ -137,24 +141,42 @@ npm run type-check    # vue-tsc type checking
 npm run lint          # eslint --fix
 ```
 
-## 3. Start the slow HTTP service (terminal 1)
+## 3. Build the backend launcher scripts (one time)
+
+The backend modules (`http-server`, `generator`, `pulsar-listener`,
+`reactive-client-impl`) are run via the launcher scripts produced by Gradle's
+`installDist` task. Build all of them once with:
+
+```bash
+./gradlew installDist
+```
+
+Re-run this whenever you change Java code. (The `just install` shorthand also
+does this, plus `npm install` in `demo-ui`.)
+
+> **Why not `./gradlew :foo:run --args='...'`?** Gradle 9's CLI parser
+> mishandles `--args` values that begin with `--` (e.g. `--args='--delay 500'`),
+> rejecting them as unknown options. Running the launcher scripts directly
+> avoids the issue and is what the `just` recipes do under the hood.
+
+## 4. Start the slow HTTP service (terminal 1)
 
 In a separate terminal, start the downstream service the consumers will call. This is
 the workload that makes concurrency settings observable:
 
 ```bash
-./gradlew :http-server:run
+./http-server/build/install/http-server/bin/http-server
 ```
 
 By default it listens on `http://localhost:8888/api/slow` with a 100 ms delay and 10%
-jitter. Tune it with `--args`:
+jitter. Tune it by passing args directly:
 
 ```bash
 # Slower endpoint — makes concurrency limits much more visible
-./gradlew :http-server:run --args='--delay 500 --jitter 0.2'
+./http-server/build/install/http-server/bin/http-server --delay 500 --jitter 0.2
 
 # Very fast endpoint
-./gradlew :http-server:run --args='--delay 10 --jitter 0.0'
+./http-server/build/install/http-server/bin/http-server --delay 10 --jitter 0.0
 ```
 
 `SlowService` options:
@@ -164,12 +186,12 @@ jitter. Tune it with `--args`:
 | `-d`, `--delay` | `100` | Per-request delay in milliseconds |
 | `-j`, `--jitter` | `0.1` | Jitter factor (0.0–1.0), added on top of `--delay` |
 
-## 4. Produce test messages (terminal 2)
+## 5. Produce test messages (terminal 2)
 
 Publish keyed messages into the default topic `persistent://public/default/test`:
 
 ```bash
-./gradlew :generator:run --args='--number-of-messages 200000 --key-space-size 500'
+./generator/build/install/generator/bin/generator --number-of-messages 200000 --key-space-size 500
 ```
 
 `Generator` options:
@@ -189,7 +211,7 @@ Publish keyed messages into the default topic `persistent://public/default/test`
 Smaller key spaces increase contention on individual keys; `GAUSSIAN_RANDOM` produces
 hot keys, while `UNIFORM_*` spreads load evenly.
 
-## 5. Consume the topic (terminal 3)
+## 6. Consume the topic (terminal 3)
 
 Pick one of the two consumer implementations. Run them against the same topic +
 subscription to compare behaviour.
@@ -197,7 +219,7 @@ subscription to compare behaviour.
 ### Option A — `pulsar-listener` (classic `MessageListener`)
 
 ```bash
-./gradlew :pulsar-listener:run --args='--concurrency 100'
+./pulsar-listener/build/install/pulsar-listener/bin/pulsar-listener --concurrency 100
 ```
 
 Key options (all in `PulsarListenerApp`):
@@ -213,26 +235,28 @@ Key options (all in `PulsarListenerApp`):
 | `-s`, `--subscription` | `test-subscription` | Subscription name |
 | `-n`, `--consumer` | `test-consumer` | Consumer name |
 
-Useful comparisons:
+Useful comparisons (from the repo root):
 
 ```bash
+PL=./pulsar-listener/build/install/pulsar-listener/bin/pulsar-listener
+
 # Low concurrency: throughput limited by ~10 in-flight HTTP calls
-./gradlew :pulsar-listener:run --args='--concurrency 10'
+$PL --concurrency 10
 
 # High concurrency on platform threads: 200 listener threads
-./gradlew :pulsar-listener:run --args='--concurrency 200'
+$PL --concurrency 200
 
 # Virtual threads with per-key ordering, 500 in-flight max
-./gradlew :pulsar-listener:run --args='--virtual-threads --concurrency 500'
+$PL --virtual-threads --concurrency 500
 
 # Smaller receiver queue — more visible backpressure
-./gradlew :pulsar-listener:run --args='--virtual-threads --concurrency 500 --queue 100'
+$PL --virtual-threads --concurrency 500 --queue 100
 ```
 
 ### Option B — `reactive-client-impl` (key-ordered reactive pipeline)
 
 ```bash
-./gradlew :reactive-client-impl:run --args='--concurrency 100'
+./reactive-client-impl/build/install/reactive-client-impl/bin/reactive-client-impl --concurrency 100
 ```
 
 Same options as the listener, except there is no `--virtual-threads` flag — the reactive
@@ -240,11 +264,13 @@ pipeline uses `useKeyOrderedProcessing()` to interleave messages across keys whi
 preserving per-key ordering.
 
 ```bash
+RC=./reactive-client-impl/build/install/reactive-client-impl/bin/reactive-client-impl
+
 # Low concurrency
-./gradlew :reactive-client-impl:run --args='--concurrency 10'
+$RC --concurrency 10
 
 # Match the high-concurrency listener run for a side-by-side comparison
-./gradlew :reactive-client-impl:run --args='--concurrency 500 --queue 1000'
+$RC --concurrency 500 --queue 1000
 ```
 
 ## What to observe

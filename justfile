@@ -22,33 +22,45 @@ pulsar-stop:
     -docker compose stop pulsar
 
 
+# Build install distributions for every backend module (creates the launcher
+# scripts that the run recipes below exec). Re-run after Java code changes.
+backend-install:
+    ./gradlew installDist
+
 # Install demo-ui dependencies (run once, or after package.json changes)
 ui-install:
     cd demo-ui && npm install
+
+# One-shot setup: backend launcher scripts + demo-ui npm deps.
+install: backend-install ui-install
 
 # Start the Vite dev server for the demo UI on http://localhost:5173
 ui:
     cd demo-ui && npm run dev
 
 # Run the slow HTTP service. Pass extra args after `--`.
+# Prerequisite: `just install` (or `just backend-install`).
 # Example: just http-server -- --delay 500 --jitter 0.2
 http-server *ARGS:
-    ./gradlew :http-server:run {{ if ARGS == '' { '' } else { '--args=' + quote(ARGS) } }}
+    ./http-server/build/install/http-server/bin/http-server {{ trim_start_match(ARGS, "-- ") }}
 
 # Run the generator. Pass extra args after `--`.
+# Prerequisite: `just install` (or `just backend-install`).
 # Example: just generator -- --number-of-messages 200000 --key-space-size 500
 generator *ARGS:
-    ./gradlew :generator:run {{ if ARGS == '' { '' } else { '--args=' + quote(ARGS) } }}
+    ./generator/build/install/generator/bin/generator {{ trim_start_match(ARGS, "-- ") }}
 
 # Run the classic MessageListener consumer. Pass extra args after `--`.
+# Prerequisite: `just install` (or `just backend-install`).
 # Example: just pulsar-listener -- --virtual-threads --concurrency 500
 pulsar-listener *ARGS:
-    ./gradlew :pulsar-listener:run {{ if ARGS == '' { '' } else { '--args=' + quote(ARGS) } }}
+    ./pulsar-listener/build/install/pulsar-listener/bin/pulsar-listener {{ trim_start_match(ARGS, "-- ") }}
 
 # Run the reactive-client consumer. Pass extra args after `--`.
+# Prerequisite: `just install` (or `just backend-install`).
 # Example: just reactive-client-impl -- --concurrency 500 --queue 1000
 reactive-client-impl *ARGS:
-    ./gradlew :reactive-client-impl:run {{ if ARGS == '' { '' } else { '--args=' + quote(ARGS) } }}
+    ./reactive-client-impl/build/install/reactive-client-impl/bin/reactive-client-impl {{ trim_start_match(ARGS, "-- ") }}
 
 # Launch the full tmuxp-driven demo session
 demo:
