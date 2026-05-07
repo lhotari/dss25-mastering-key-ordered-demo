@@ -58,7 +58,8 @@ just pulsar-listener     -- --virtual-threads --concurrency 500
 just reactive-client-impl -- --concurrency 500 --queue 1000
 ```
 
-Tear everything down with `just clean` (kills the tmux session and stops the broker).
+Tear everything down with `just stop` (kills the tmux session and stops the broker; state
+preserved) or `just clean` (also drops the `pulsardata` / `pulsarconf` volumes).
 
 ## Installing the demo tooling
 
@@ -82,16 +83,15 @@ purely a convenience for live demos.
 
 ## 1. Start Pulsar in Docker
 
-Run a Pulsar standalone broker, exposing the binary protocol port `6650` and the admin
-HTTP port `8080`:
+A [`docker-compose.yml`](docker-compose.yml) at the repo root runs a Pulsar standalone
+broker (`apachepulsar/pulsar:latest`) and exposes the binary protocol port `6650` and
+the admin HTTP port `8080`. It uses named volumes (`pulsardata`, `pulsarconf`) so state
+survives restarts.
 
 ```bash
-docker run --rm -it \
-  -p 6650:6650 \
-  -p 8080:8080 \
-  --name pulsar \
-  apachepulsar/pulsar:latest \
-  bin/pulsar standalone -nfw -nss
+docker compose up pulsar          # foreground; Ctrl-C to stop
+# or, equivalently:
+just pulsar
 ```
 
 Wait until the log shows `messaging service is ready`. Verify with:
@@ -99,6 +99,14 @@ Wait until the log shows `messaging service is ready`. Verify with:
 ```bash
 curl -s http://localhost:8080/admin/v2/clusters
 # => ["standalone"]
+```
+
+Lifecycle commands:
+
+```bash
+just pulsar-stop      # stop the container, keep volumes (state preserved)
+just stop             # also kill the dss25-demo tmux session
+just clean            # docker compose down -v: stop, then remove containers AND volumes
 ```
 
 ## 2. Start the demo UI (optional, terminal 0)
@@ -262,11 +270,22 @@ Try the same generator workload against:
 Stop the consumer/generator/server with Ctrl-C, then stop the broker:
 
 ```bash
-docker stop pulsar
+docker compose stop pulsar    # or: just pulsar-stop
 ```
 
-To reset the topic between runs, delete and recreate the subscription via the admin API,
-or use a fresh subscription name with `--subscription`.
+To reset the topic between runs, either:
+
+- use a fresh subscription name with `--subscription` (cheap, keeps broker state), or
+- nuke the broker entirely and start over:
+
+  ```bash
+  just clean                  # stops the demo, then docker compose down -v (drops volumes)
+  just pulsar                 # start a fresh broker
+  ```
+
+`just stop` combines `pulsar-stop` with killing the `dss25-demo` tmux session in one
+command (state preserved); `just clean` additionally wipes the `pulsardata` /
+`pulsarconf` volumes (it depends on `stop`, so it stops everything first if it's running).
 
 ## Acknowledgements
 
